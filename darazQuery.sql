@@ -1,6 +1,7 @@
 --- Q2 
 Use DarazCase;
 
+
 Select Customer_id, order_date, quantity from Orders$;
 Select * from Returns$;
 

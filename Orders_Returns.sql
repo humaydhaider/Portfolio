@@ -4,8 +4,10 @@
 Select Customer_id, order_date, quantity from Orders$;
 Select * from Returns$;
 
-Select DISTINCT o.customer_Id AS Customer_ID, 
-COUNT(r.returned) AS 'Total Returned Orders', CONCAT(100*COUNT(r.returned) / COUNT(o.Order_ID),'%') AS 'Return Rate'
+Select 
+	DISTINCT o.customer_Id AS Customer_ID, 
+	COUNT(r.returned) AS 'Total Returned Orders', 
+	CONCAT(100*COUNT(r.returned) / COUNT(o.Order_ID),'%') AS 'Return Rate'
 From Orders$ o
 LEFT JOIN
 Returns$ r ON o.Order_ID = r.Order_ID
@@ -17,8 +19,10 @@ Group by o.Customer_ID, r.Returned;
 Select * from Managers$;
 Select region, profit from Orders$;
 
-Select DATENAME(Month,Order_date) AS Month, m.person AS Manager,
-SUM(Profit) AS Profit_Loss
+Select 
+	DATENAME(Month,Order_date) AS Month,
+	m.person AS Manager,
+	SUM(Profit) AS Profit_Loss
 From Managers$ m
 JOIN
 Orders$ o ON m.Region = o.Region
@@ -30,7 +34,8 @@ Order by Month ASC;
 
 Select * from Orders$;
 
-	Select DATENAME(Month,Order_Date) AS Month, 
+Select 
+	DATENAME(Month,Order_Date) AS Month, 
 	AVG(DATEDIFF(Day,Order_Date,Ship_Date)) AS Order_to_Ship,
 	CONCAT(100*COUNT(Case when DATEDIFF(Day,Order_Date,Ship_Date) <= 2 then Order_ID else null end) / (Count(Order_Id)),'%') AS '% orders shipped in 2 days'
 	From Orders$
@@ -41,13 +46,22 @@ Select * from Orders$;
 --- Ranking top 5 selling products by month.
 
 Select Product_Name, Month1, Total_Qty from
-(Select Product_Name,
-DATENAME(month,order_date) AS Month1, SUM(Quantity) As Total_Qty,
-RANK() OVER (Partition by DATENAME(month,order_date) Order by SUM(Quantity) DESC) AS 'Rank1'
-From Orders$
-Group by Product_name, DATENAME(month,order_date))
+	(Select
+	 Product_Name,
+	 DATENAME(month,order_date) AS Month1, 
+	 SUM(Quantity) As Total_Qty,
+	 RANK() OVER (Partition by DATENAME(month,order_date) Order by SUM(Quantity) DESC) AS 'Rank1'
+From 
+	 Orders$
+Group by 
+	 Product_name, 
+	 DATENAME(month,order_date))
+	 
 A Where Rank1 Between 1 AND 5
-Group by Product_Name, Month1, Total_Qty;
+Group by 
+	Product_Name,
+	Month1, 
+	Total_Qty;
 
 
 

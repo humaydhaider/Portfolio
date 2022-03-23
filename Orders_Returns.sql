@@ -1,5 +1,4 @@
---- Q2 
-Use DarazCase;
+--- Customer returns and return rate by Customer_ID
 
 
 Select Customer_id, order_date, quantity from Orders$;
@@ -13,7 +12,7 @@ Returns$ r ON o.Order_ID = r.Order_ID
 Group by o.Customer_ID, r.Returned;
 
 
----Q4
+--- Managers' profitability, divided monthly
 
 Select * from Managers$;
 Select region, profit from Orders$;
@@ -26,7 +25,8 @@ Orders$ o ON m.Region = o.Region
 Group by Month, Manager
 Order by Month ASC;
 
----Q1 
+--- Difference between order and shipping date.
+--- Percentage of orders delivered within 2 days
 
 Select * from Orders$;
 
@@ -38,7 +38,8 @@ Select * from Orders$;
 	Order by Month ASC;
 	
 
---- Q3
+--- Ranking top 5 selling products by month.
+
 Select Product_Name, Month1, Total_Qty from
 (Select Product_Name,
 DATENAME(month,order_date) AS Month1, SUM(Quantity) As Total_Qty,

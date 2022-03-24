@@ -9,7 +9,7 @@ Select
 	COUNT(r.returned) AS 'Total Returned Orders', 
 	CONCAT(100*COUNT(r.returned) / COUNT(o.Order_ID),'%') AS 'Return Rate'
 From Orders$ o
-LEFT JOIN
+INNER JOIN
 Returns$ r ON o.Order_ID = r.Order_ID
 Group by o.Customer_ID, r.Returned;
 

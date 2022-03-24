@@ -1,4 +1,5 @@
 --- Customer returns and return rate by Customer_ID
+--- Customers who returned more than 2 items.
 
 
 Select Customer_id, order_date, quantity from Orders$;
@@ -11,7 +12,8 @@ Select
 From Orders$ o
 INNER JOIN
 Returns$ r ON o.Order_ID = r.Order_ID
-Group by o.Customer_ID, r.Returned;
+Group by o.Customer_ID, r.Returned
+Having 'Total Returned Orders' > 2;
 
 
 --- Managers' profitability, divided monthly

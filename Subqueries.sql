@@ -17,9 +17,9 @@ INNER JOIN
 -- Department selection table
 
     (SELECT  
-			id,
+	 	id,
 						
-			name
+		name
 
 FROM
 		Department
@@ -55,17 +55,21 @@ FROM    (
                     ,COUNT(DISTINCT(visitor_id)) AS Visitor_Count
                     ,RANK() OVER  (PARTITION BY substr(ds,1,6), category_name ORDER BY COUNT(DISTINCT(visitor_id)) DESC) AS rank1
             FROM    (
-                        SELECT  id
-                                ,category_name
-					FROM    test_table
+                        SELECT  id,
+		    
+                                category_name
+FROM    test_table
 
 ) AS A
 
 JOIN 
-				(SELECT id
+	(SELECT id
                ,se_keyword
-    				   ,visitor_id
-               ,ds  test_table  
+    	        ,visitor_id
+               ,ds  
+	 
+FROM 	test_table  
+	 
                WHERE date BETWEEN 20220101 AND 20220531 
                AND venture = 'PK'
 ) AS B
@@ -80,7 +84,7 @@ JOIN
 WHERE   rank1 <= 20
 
 GROUP BY 
-					month_
+        month_
 					
          ,category_name
 				 

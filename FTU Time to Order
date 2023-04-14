@@ -1,0 +1,40 @@
+WITH orders AS (
+    SELECT DISTINCT user_id,
+           MIN(date_placed) AS first_order_date,
+           RANK() OVER (PARTITION BY user_id ORDER BY date_placed) as rank1
+    FROM order_order 
+    WHERE user_id IS NOT NULL 
+    AND {{partner_id}}
+    AND STATUS NOT IN ('cancelled','Cancelled')
+    GROUP BY 1,date_placed
+    ORDER BY 1 ASC
+),
+first_order AS (
+    SELECT user_id, first_order_date
+    FROM orders 
+    WHERE rank1 = 1 
+),
+signup AS (
+    SELECT id, 
+           date_joined as join_date 
+    FROM auth_user 
+    GROUP BY 1
+),
+Main_table AS 
+(
+    SELECT DISTINCT orders.user_id AS ID,
+      DATE(DATE_TRUNC('month',first_order.first_order_date)) as order_months,
+      (first_order.first_order_date- join_date) AS time_difference,
+    (CASE 
+        WHEN first_order.first_order_date <= signup.join_date + INTERVAL '1 HOUR' THEN 'WIP'
+        ELSE 'Organic' END) AS user_acq            
+    FROM orders 
+    JOIN first_order ON orders.user_id = first_order.user_id
+    JOIN signup ON orders.user_id = signup.id 
+    ORDER BY 1 ASC    
+) 
+    SELECT order_months, AVG(time_difference) AS "Average FTU Signup to Order Time"
+    FROM Main_table 
+    WHERE user_acq = {{Type}}
+    GROUP BY order_months 
+    ORDER BY 1 DESC 

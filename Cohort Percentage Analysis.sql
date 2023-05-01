@@ -116,3 +116,4 @@ SELECT
 FROM 
   rownumber 
   LEFT JOIN cohort_initial_users ON rownumber.c
+  

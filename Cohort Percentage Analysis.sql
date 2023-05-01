@@ -1,3 +1,7 @@
+-- This query calculates the retention rate of users in a monthly cohort. 
+
+-- Create a temporary table 'customer' to select user_id and cohort month based on the first order they placed. 
+
 WITH customer AS (
   SELECT 
     user_id, 
@@ -13,6 +17,9 @@ WITH customer AS (
   GROUP BY 
     user_id
 ), 
+
+-- Create a temporary table 'base' to calculate the number of orders placed by each user in a given month and associate each order to its respective cohort month.
+
 base AS (
   SELECT 
     order_order.user_id, 
@@ -30,6 +37,9 @@ base AS (
     order_month, 
     cohort_month
 ), 
+
+-- Create a temporary table 'dates' to generate a sequence of months between each user's cohort month and the current date.
+
 dates AS (
   SELECT 
     user_id, 
@@ -41,6 +51,9 @@ dates AS (
   FROM 
     customer
 ), 
+
+-- Create a temporary table 'cohort' to calculate the number of users who made their first purchase in the cohort month and the number of those users who made a purchase in each subsequent month.
+
 cohort AS (
   SELECT 
     customer.cohort_month, 
@@ -65,6 +78,9 @@ cohort AS (
     1, 
     2
 ), 
+
+-- Create a temporary table 'cohort_initial_users' to select the initial number of users in each cohort month.
+
 cohort_initial_users AS (
   SELECT 
     cohort_month, 
@@ -74,6 +90,9 @@ cohort_initial_users AS (
   WHERE 
     cohort_month = order_month
 ), 
+
+-- Create a temporary table 'rownumber' to assign a row number to each cohort month and order month combination.
+
 rownumber AS (
   SELECT 
     cohort_month, 
@@ -83,6 +102,9 @@ rownumber AS (
   FROM 
     cohort
 ) 
+
+-- Select the cohort month, order months, and retention rate for each cohort month and order month combination.
+
 SELECT 
   rownumber.cohort_month AS "Cohort Month", 
   r1 AS "Order Months", 
@@ -93,11 +115,4 @@ SELECT
   ) END AS "Retention Rate" 
 FROM 
   rownumber 
-  LEFT JOIN cohort_initial_users ON rownumber.cohort_month = cohort_initial_users.cohort_month 
-GROUP BY 
-  1, 
-  2, 
-  3 
-ORDER BY 
-  1, 
-  2;
+  LEFT JOIN cohort_initial_users ON rownumber.c

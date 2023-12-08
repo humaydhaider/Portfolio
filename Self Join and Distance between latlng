@@ -1,0 +1,74 @@
+WITH retailer_details AS (
+    SELECT distinct
+        orders.retailer_id,
+        CAST(users.created_at + Interval '5HRS' AS DATE) AS "Signup Date",
+        orders.retailer AS retailer_name,
+        orders.retailer_mobile,
+        orders.retailer_area,
+        orders.retailer_subarea,
+        order_details.latlng,
+        CAST(order_details.latlng ->> 'lat' as float) AS latitude, 
+        CAST(order_details.latlng ->> 'lng' as float) AS longitude, 
+        device_id
+    FROM
+        order_user_details_fmcg AS orders
+    LEFT JOIN order_details ON orders.order_id = order_details.order_id
+    LEFT JOIN users ON orders.retailer_id = users.id 
+    WHERE
+        CAST(orders.order_created_at - INTERVAL '15hrs' AS DATE) >= '2023-01-01'
+        AND CAST(users.created_at + Interval '5HRS' AS DATE) >= '2023-01-01'
+        AND orders.order_status_id IN (4, 5)
+    AND device_id is not null 
+    --AND orders.order_agent_id IS NULL ----to exclude inorganic order users to avoid one to many results.
+)
+select distinct 
+    -- r1.retailer_id, 
+    -- r1.retailer_name, 
+    -- r1."Signup Date",
+    -- r1.latlng, 
+    -- r1.device_id, 
+    
+    r2.retailer_id,
+    r2."Signup Date",
+    --r1."Signup Date" AS "Other Signup Date from same Device",
+    r2.retailer_name, 
+    r2.retailer_mobile,
+--(CASE WHEN r2.retailer_mobile = r1.retailer_mobile THEN 'Number Found Before' ELSE 'New Number' END) AS "Phone Number Flag",
+    r2.latlng, 
+    r2.device_id,
+    ST_DistanceSphere(
+    ST_MakePoint(r1.longitude, r1.latitude),
+    ST_MakePoint(r2.longitude, r2.latitude)
+) AS distance_in_meters_from_duplicate,
+-- SQRT(
+--     POWER(r1.longitude - r2.longitude, 2) +
+--     POWER(r1.latitude - r2.latitude, 2)
+-- )*111319.9 AS euclidean_distance_from_duplicate, ----to convert degrees to meters we take a rough estimate of 111319.9. 
+
+(CASE 
+    WHEN  ST_DistanceSphere(
+                ST_MakePoint(r1.longitude, r1.latitude),
+                ST_MakePoint(r2.longitude, r2.latitude)
+           ) <= 1000 THEN 'Close Proximity'
+    WHEN  ST_DistanceSphere(
+                ST_MakePoint(r1.longitude, r1.latitude),
+                ST_MakePoint(r2.longitude, r2.latitude)
+           ) <= 5000 THEN 'Moderate Close Proximity' 
+    WHEN  ST_DistanceSphere(
+                ST_MakePoint(r1.longitude, r1.latitude),
+                ST_MakePoint(r2.longitude, r2.latitude)
+           ) > 5000 THEN 'Not in Close Proximity' 
+END) AS "Proximity Status",
+    
+    (CASE WHEN r1.device_id = r2.device_id THEN 'Duplicate Device ID' ELSE 'Unique Device ID' END) AS "Device Duplicate",
+STRING_AGG(r1.retailer_id::text, ',  ') AS "Potential Duplicate Retailer ID's"
+    
+FROM 
+    retailer_details r1 
+JOIN 
+    retailer_details r2 ON r1.device_id = r2.device_id AND r1.retailer_id <> r2.retailer_id 
+WHERE r2."Signup Date" >= '2023-05-01'
+[[AND r2.retailer_id::text = {{CustomerID}}]]
+[[AND r2.retailer_mobile::numeric = {{Phone}}]]
+GROUP BY 1,2,3,4,5,6,7,8,9
+ORDER BY 7 ASC 
